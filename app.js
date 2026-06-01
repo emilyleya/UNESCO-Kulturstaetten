@@ -84,20 +84,41 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initMap() {
-    map = L.map("map", { zoomControl: false, attributionControl: false }).setView([25.0, 15.0], 3);
-    activeTileLayer = L.tileLayer(TILE_LAYERS[currentTheme], { maxZoom: 19 }).addTo(map);
+            // Wir definieren die Grenzen der Welt (Süden, Westen, Norden, Osten)
+            const weltGrenzen = L.latLngBounds(
+                L.latLng(-85, -180), // Unten links (Südwesten)
+                L.latLng(85, 180)    // Oben rechts (Nordosten)
+            );
 
-    HERITAGE_DATA.forEach(site => {
-        const customIcon = L.divIcon({
-            className: "custom-premium-marker",
-            html: `<div class="marker-pulse-wrapper"><div class="marker-core"></div><div class="marker-pulse"></div></div>`,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
-        });
+            // Initialisierung Karte mit Zoom-Stopp und Begrenzung
+            map = L.map("map", { 
+                zoomControl: false, 
+                attributionControl: false,
+                minZoom: 2.5,          // Verhindert das zu weite Rauszoomen (Zoom-Stopp!)
+                maxBounds: weltGrenzen, // Sperrt das unendliche Scrollen nach links/rechts
+                maxBoundsViscosity: 1.0 // Macht die Grenzen "hart", die Karte federt nicht zurück
+            }).setView([25.0, 15.0], 3);
 
-        L.marker(site.coordinates, { icon: customIcon }).addTo(map).on("click", () => selectSite(site));
-    });
-}
+            // noWrap: true verhindert, dass die Kacheln sich wiederholen
+            activeTileLayer = L.tileLayer(TILE_LAYERS[currentTheme], { 
+                maxZoom: 19,
+                noWrap: true 
+            }).addTo(map);
+
+            // Marker setzen
+            HERITAGE_DATA.forEach(site => {
+                const icon = L.divIcon({
+                    className: "custom-premium-marker",
+                    html: `<div class="marker-pulse-wrapper"><div class="marker-core"></div><div class="marker-pulse"></div></div>`,
+                    iconSize: [20, 20], iconAnchor: [10, 10]
+                });
+                L.marker(site.coordinates, { icon: icon }).addTo(map).on("click", () => selectSite(site));
+            });
+
+            updateXPUIs();
+            renderQuickList();
+            setupEventListeners();
+        }
 
 function initGamification() { updateXPUIs(); }
 
